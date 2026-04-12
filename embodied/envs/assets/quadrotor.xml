@@ -1,0 +1,44 @@
+<mujoco model="quadrotor">
+  <compiler angle="radian"/>
+  <option gravity="0 0 -9.81" timestep="0.016"/>
+
+  <visual>
+    <headlight ambient="0.4 0.4 0.4" diffuse="0.8 0.8 0.8" specular="0.1 0.1 0.1"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+  </visual>
+
+  <worldbody>
+    <light pos="0 0 6" dir="0 0 -1" diffuse="0.8 0.8 0.8"/>
+    <camera name="overview" pos="0 -8 5" xyaxes="1 0 0 0 0.5 1"/>
+    <geom name="floor" type="plane" size="10 10 0.1" rgba="0.7 0.7 0.7 1" friction="1 0.005 0.0001"/>
+
+    <body name="drone" pos="0 0 2">
+      <freejoint name="root"/>
+      <inertial mass="0.716" pos="0 0 0" diaginertia="0.007 0.007 0.012"/>
+
+      <!-- Central body -->
+      <geom type="box" size="0.05 0.05 0.02" rgba="0.2 0.5 0.9 1"/>
+
+      <!-- Arm cross -->
+      <geom type="cylinder" size="0.01 0.12" pos=" 0.12 0 0" euler="0 1.5708 0" rgba="0.3 0.3 0.3 1"/>
+      <geom type="cylinder" size="0.01 0.12" pos="-0.12 0 0" euler="0 1.5708 0" rgba="0.3 0.3 0.3 1"/>
+      <geom type="cylinder" size="0.01 0.12" pos="0  0.12 0" euler="1.5708 0 0" rgba="0.3 0.3 0.3 1"/>
+      <geom type="cylinder" size="0.01 0.12" pos="0 -0.12 0" euler="1.5708 0 0" rgba="0.3 0.3 0.3 1"/>
+
+      <!-- Rotor discs (visual only) -->
+      <geom type="cylinder" size="0.06 0.003" pos=" 0.12  0.12 0.01" rgba="0.1 0.1 0.1 0.6"/>
+      <geom type="cylinder" size="0.06 0.003" pos="-0.12  0.12 0.01" rgba="0.1 0.1 0.1 0.6"/>
+      <geom type="cylinder" size="0.06 0.003" pos="-0.12 -0.12 0.01" rgba="0.1 0.1 0.1 0.6"/>
+      <geom type="cylinder" size="0.06 0.003" pos=" 0.12 -0.12 0.01" rgba="0.1 0.1 0.1 0.6"/>
+
+      <!-- Rotor force application sites (X config) -->
+      <site name="rotor0" pos=" 0.12  0.12 0" size="0.01"/>
+      <site name="rotor1" pos="-0.12  0.12 0" size="0.01"/>
+      <site name="rotor2" pos="-0.12 -0.12 0" size="0.01"/>
+      <site name="rotor3" pos=" 0.12 -0.12 0" size="0.01"/>
+
+      <!-- Heading indicator (forward = +x) -->
+      <geom type="box" size="0.03 0.01 0.01" pos="0.06 0 0.02" rgba="1 0.3 0.3 1"/>
+    </body>
+  </worldbody>
+</mujoco>

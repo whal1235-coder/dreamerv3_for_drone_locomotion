@@ -1,0 +1,36 @@
+name: dreamerv3-drone
+channels:
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+    # JAX (CUDA 12)
+    - jax[cuda12]==0.9.2
+    - flax==0.12.6
+    - optax==0.2.5
+    - chex==0.1.90
+    - jaxtyping==0.3.9
+    - einops==0.8.2
+
+    # DreamerV3 core
+    - elements==3.22.0
+    - ninjax==3.6.2
+    - portal==3.8.1
+    - granular==0.23.0
+    - scope==0.6.3
+
+    # MuJoCo
+    - mujoco==3.6.0
+    - mujoco-mjx==3.6.0
+
+    # Utilities
+    - numpy==2.4.4
+    - ruamel.yaml==0.19.1
+    - matplotlib==3.10.8
+    - tqdm==4.67.3
+    - colored-traceback==0.4.2
+
+    # Atari (optional, for other DreamerV3 tasks)
+    - ale-py==0.9.0
+    - autorom[accept-rom-license]==0.6.1

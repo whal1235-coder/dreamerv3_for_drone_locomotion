@@ -218,3 +218,19 @@ debug:
     .*\.hidden: 3
     .*\.blocks: 4
     .*\.depth: 2
+
+mujocohover:
+  task: mujoco_hover
+  run:
+    steps: 1000000
+
+mujocotrack:
+  task: mujoco_track
+  run:
+    steps: 1000000
+
+mujocoforest:
+  task: mujoco_forest
+  run:
+    steps: 1000000
+

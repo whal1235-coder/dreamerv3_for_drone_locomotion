@@ -1,0 +1,69 @@
+# ===========================================================================
+# DreamerV3 — Train
+# ===========================================================================
+
+# hover
+python dreamerv3/main.py --configs mujocohover --jax.platform cuda
+
+# track
+python dreamerv3/main.py --configs mujocotrack --jax.platform cuda
+
+# forest
+python dreamerv3/main.py --configs mujocoforest --jax.platform cuda
+
+
+# ===========================================================================
+# PPO — Train
+# ===========================================================================
+
+# hover
+python train_ppo.py --task hover --n_envs 4096
+
+# track
+python train_ppo.py --task track --n_envs 4096
+
+# forest
+python train_ppo.py --task forest --n_envs 4096
+
+
+# ===========================================================================
+# DreamerV3 — Play
+# ===========================================================================
+
+# hover
+python play_mujoco.py ~/logdir/dreamerv3/hover --task hover
+
+# track
+python play_mujoco.py ~/logdir/dreamerv3/track --task track
+
+# forest
+python play_mujoco.py ~/logdir/dreamerv3/forest --task forest
+
+
+# ===========================================================================
+# PPO — Play
+# ===========================================================================
+
+# hover
+python play_mujoco.py ~/logdir/ppo/hover --task hover --algo ppo
+
+# track
+python play_mujoco.py ~/logdir/ppo/track --task track --algo ppo
+
+# forest
+python play_mujoco.py ~/logdir/ppo/forest --task forest --algo ppo
+
+
+# ===========================================================================
+# Plot
+# ===========================================================================
+
+# DreamerV3
+python plot_metrics.py ~/logdir/dreamerv3/forest
+python plot_metrics.py ~/logdir/dreamerv3/track
+python plot_metrics.py ~/logdir/dreamerv3/hover
+
+# PPO
+python plot_metrics.py ~/logdir/ppo/forest
+python plot_metrics.py ~/logdir/ppo/track
+python plot_metrics.py ~/logdir/ppo/hover

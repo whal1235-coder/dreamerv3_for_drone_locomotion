@@ -48,6 +48,7 @@ def train(make_agent, make_replay, make_env, make_stream, make_logger, args):
       logger.add({
           'score': result.pop('score'),
           'length': result.pop('length'),
+          'terminated': float(tran['is_terminal']),
       }, prefix='episode')
       rew = result.pop('rewards')
       if len(rew) > 1:
@@ -80,7 +81,7 @@ def train(make_agent, make_replay, make_env, make_stream, make_logger, args):
       train_agg.add(mets, prefix='train')
   driver.on_step(trainfn)
 
-  cp = elements.Checkpoint(logdir / 'ckpt')
+  cp = elements.Checkpoint(logdir / 'ckpt', keep=None)
   cp.step = step
   cp.agent = agent
   cp.replay = replay
@@ -115,5 +116,22 @@ def train(make_agent, make_replay, make_env, make_stream, make_logger, args):
 
     if should_save(step):
       cp.save()
+      try:
+        import subprocess, sys
+        subprocess.Popen([sys.executable,
+                          str(elements.Path(__file__).parent.parent.parent /
+                              'plot_metrics.py'),
+                          str(logdir)],
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+      except Exception:
+        pass
 
+  # final save — always flush metrics and checkpoint at end of training
+  logger.add(train_agg.result())
+  logger.add(epstats.result(), prefix='epstats')
+  logger.add(replay.stats(), prefix='replay')
+  logger.add({'fps/policy': policy_fps.result()})
+  logger.add({'fps/train': train_fps.result()})
+  logger.write()
+  cp.save()
   logger.close()

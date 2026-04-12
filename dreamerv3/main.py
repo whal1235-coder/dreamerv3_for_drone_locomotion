@@ -27,6 +27,10 @@ def main(argv=None):
   for name in parsed.configs:
     config = config.update(configs[name])
   config = elements.Flags(config).parse(other)
+  if '{timestamp}' in config.logdir:
+    # strip suite prefix (e.g. mujoco_forest → forest)
+    task_name = config.task.split('_', 1)[-1] if '_' in config.task else config.task
+    config = config.update(logdir=f'~/logdir/dreamerv3/{task_name}')
   config = config.update(logdir=(
       config.logdir.format(timestamp=elements.timestamp())))
 
@@ -229,6 +233,7 @@ def make_env(config, index, **overrides):
       'langroom': 'embodied.envs.langroom:LangRoom',
       'procgen': 'embodied.envs.procgen:ProcGen',
       'bsuite': 'embodied.envs.bsuite:BSuite',
+      'mujoco': 'embodied.envs.mujoco_drone:MujocoDrone',
       'memmaze': lambda task, **kw: from_gym.FromGym(
           f'MemoryMaze-{task}-v0', **kw),
   }[suite]

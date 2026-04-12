@@ -277,9 +277,9 @@ def ckpt_fn(params, compile=True):
   keys = params.keys()
   original = {k: params[k].sharding for k in keys}
   inspec = {k: struct(params[k], original[k]) for k in keys}
-  gather_fn = jax.jit(lambda x: x, (original,), mirrored).lower(inspec)
+  gather_fn = jax.jit(lambda x: x, in_shardings=(original,), out_shardings=mirrored).lower(inspec)
   inspec = {k: struct(params[k], mirrored) for k in keys}
-  shard_fn = jax.jit(lambda x: x, (mirrored,), original).lower(inspec)
+  shard_fn = jax.jit(lambda x: x, in_shardings=(mirrored,), out_shardings=original).lower(inspec)
   if compile:
     gather_fn = gather_fn.compile()
     shard_fn = shard_fn.compile()
