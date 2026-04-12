@@ -48,7 +48,6 @@ def train(make_agent, make_replay, make_env, make_stream, make_logger, args):
       logger.add({
           'score': result.pop('score'),
           'length': result.pop('length'),
-          'terminated': float(tran['is_terminal']),
       }, prefix='episode')
       rew = result.pop('rewards')
       if len(rew) > 1:

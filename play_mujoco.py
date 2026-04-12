@@ -132,14 +132,16 @@ def _draw_forest_viz(viewer, env):
 
     # Lidar rays: only draw rays that actually hit an obstacle
     drone_pos = env.data.qpos[:3].astype(np.float64)
+    R = env.data.xmat[env._drone_body_id].reshape(3, 3)  # body → world
     scan = env._last_lidar_scan
-    for ray_dir, scan_val in zip(env._lidar_dirs, scan):
+    for ray_dir_body, scan_val in zip(env._lidar_dirs, scan):
         if scan_val < 0.05:  # no obstacle detected
             continue
         if scn.ngeom >= scn.maxgeom:
             break
+        ray_dir_world = R @ ray_dir_body
         actual_dist = float(env.LIDAR_RANGE - scan_val)
-        end_pt = drone_pos + ray_dir * actual_dist
+        end_pt = drone_pos + ray_dir_world * actual_dist
         t = actual_dist / env.LIDAR_RANGE  # 1=far, 0=touching
         rgba = np.array([1.0 - t, t * 0.7, 0.0, 0.5 + 0.5 * (1.0 - t)], np.float32)
         mujoco.mjv_connector(
