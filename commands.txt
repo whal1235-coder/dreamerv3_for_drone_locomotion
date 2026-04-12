@@ -3,14 +3,11 @@
 # ===========================================================================
 
 # hover
-python dreamerv3/main.py --configs mujocohover --jax.platform cuda
-
+python dreamerv3/main.py --configs mujocohover
 # track
-python dreamerv3/main.py --configs mujocotrack --jax.platform cuda
-
+python dreamerv3/main.py --configs mujocotrack
 # forest
-python dreamerv3/main.py --configs mujocoforest --jax.platform cuda
-
+python dreamerv3/main.py --configs mujocoforest
 
 # ===========================================================================
 # PPO — Train

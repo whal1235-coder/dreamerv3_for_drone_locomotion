@@ -172,17 +172,36 @@ def _draw_forest_viz(viewer, env):
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _find_best_ckpt_from_log(logdir: pathlib.Path) -> pathlib.Path:
-    """Load best.pkl, annotating it with the step from metrics.jsonl."""
+def _find_best_ckpt_from_log(logdir: pathlib.Path, algo: str = 'ppo') -> pathlib.Path:
+    """Find the numbered checkpoint right before the best score.
+
+    The best-score checkpoint itself may be one where the model is already
+    breaking, so we select the checkpoint immediately preceding it for
+    more stable behaviour.
+
+    Works for both PPO (.pkl files) and DreamerV3 (directories).
+    """
     import json as _json
 
     ckpt_dir = logdir / 'ckpt'
-    best_pkl = ckpt_dir / 'best.pkl'
 
-    # Read metrics.jsonl to find the step/score at which best.pkl was saved
+    # All numbered checkpoints, sorted by step
+    if algo == 'ppo':
+        ckpt_files = sorted(
+            (p for p in ckpt_dir.glob('[0-9]*.pkl')),
+            key=lambda p: int(p.stem),
+        )
+    else:
+        ckpt_files = sorted(
+            (p for p in ckpt_dir.iterdir()
+             if p.is_dir() and p.name not in ('latest', 'best') and p.name.isdigit()),
+            key=lambda p: int(p.name),
+        )
+
+    # Read metrics.jsonl to find the step at which the best score occurred
     metrics_path = logdir / 'metrics.jsonl'
+    best_step, best_score = None, -float('inf')
     if metrics_path.exists():
-        best_step, best_score = None, -float('inf')
         with open(metrics_path) as f:
             for line in f:
                 line = line.strip()
@@ -196,23 +215,36 @@ def _find_best_ckpt_from_log(logdir: pathlib.Path) -> pathlib.Path:
                         best_step = entry.get('step')
                 except Exception:
                     continue
-        if best_step is not None:
-            print(f'Best episode/score={best_score:.2f} at step {best_step:,}')
 
-    if best_pkl.exists():
-        return best_pkl
+    def _ckpt_step(p):
+        return int(p.stem) if p.suffix == '.pkl' else int(p.name)
 
-    # Fallback: numbered checkpoint with highest step
-    ckpt_files = sorted(
-        (p for p in ckpt_dir.glob('[0-9]*.pkl')),
-        key=lambda p: int(p.stem),
-    )
+    if best_step is not None and ckpt_files:
+        print(f'Best episode/score={best_score:.2f} at step {best_step:,}')
+        # Find the checkpoint right before the best-score step
+        prev = None
+        for p in ckpt_files:
+            if _ckpt_step(p) >= best_step:
+                break
+            prev = p
+        if prev is not None:
+            print(f'Selecting checkpoint before best: {prev.name}')
+            return prev
+        # best_step is at or before the first checkpoint — use the first one
+        print(f'No checkpoint before best step, using first: {ckpt_files[0].name}')
+        return ckpt_files[0]
+
+    # Fallback: latest numbered checkpoint
     if ckpt_files:
-        print(f'[warn] best.pkl not found, using latest numbered checkpoint')
+        print(f'[warn] Could not determine best step, using latest: {ckpt_files[-1].name}')
         return ckpt_files[-1]
 
-    print('[warn] No checkpoints found, trying latest.pkl')
-    return ckpt_dir / 'latest.pkl'
+    if algo == 'ppo':
+        print('[warn] No checkpoints found, trying latest.pkl')
+        return ckpt_dir / 'latest.pkl'
+    else:
+        print('[warn] No checkpoints found, trying latest')
+        return ckpt_dir / 'latest'
 
 
 def _ckpt_step_str(path: pathlib.Path) -> str:
@@ -241,6 +273,8 @@ def main():
                         help='Playback speed multiplier (e.g. 2.0 = 2x)')
     parser.add_argument('--no-best', action='store_true',
                         help='Load latest checkpoint instead of best')
+    parser.add_argument('--ckpt', type=str, default=None,
+                        help='Path to a specific checkpoint (overrides --no-best)')
     parser.add_argument('--no-gui', action='store_true',
                         help='Disable MuJoCo viewer')
     args = parser.parse_args()
@@ -288,15 +322,13 @@ def main():
         )
         agent = Agent(obs_space, act_space, agent_config)
 
-        ckpt_dir = logdir / 'ckpt'
-        if not args.no_best and (ckpt_dir / 'best').exists():
-            ckpt_path = ckpt_dir / 'best'
+        if args.ckpt:
+            ckpt_path = pathlib.Path(args.ckpt)
+        elif not args.no_best:
+            ckpt_path = _find_best_ckpt_from_log(logdir, algo='dreamer')
         else:
-            ckpt_path = max(
-                (p for p in ckpt_dir.iterdir() if p.is_dir() and p.name not in ('latest', 'best')),
-                key=lambda p: p.stat().st_mtime,
-            )
-        print(f'Loading DreamerV3 checkpoint: {ckpt_path} ({"best" if not args.no_best else "latest"})')
+            ckpt_path = logdir / 'ckpt' / 'latest'
+        print(f'Loading DreamerV3 checkpoint: {ckpt_path}')
         cp = elements.Checkpoint()
         cp.agent = agent
         cp.load(str(ckpt_path), keys=['agent'])
@@ -319,8 +351,10 @@ def main():
         sys.path.insert(0, str(pathlib.Path(__file__).parent))
         from train_ppo import ActorCritic, twohot_decode, _load_ppo_config
 
-        if not args.no_best:
-            ckpt_path = _find_best_ckpt_from_log(logdir)
+        if args.ckpt:
+            ckpt_path = pathlib.Path(args.ckpt)
+        elif not args.no_best:
+            ckpt_path = _find_best_ckpt_from_log(logdir, algo='ppo')
         else:
             ckpt_path = logdir / 'ckpt' / 'latest.pkl'
         print(f'Loading PPO checkpoint: {ckpt_path.name} ({_ckpt_step_str(ckpt_path)})')
