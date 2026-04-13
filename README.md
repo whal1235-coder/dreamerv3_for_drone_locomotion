@@ -27,6 +27,18 @@ Based on [Mastering Diverse Domains through World Models (Hafner et al., Nature 
 | `mujocotrack` | Track | Follow a lemniscate trajectory |
 | `mujocoforest` | Forest | Navigate through a forest of obstacles (based on [OmniDrones][omnidrones] Forest) |
 
+| Hover | Track | Forest |
+|:---:|:---:|:---:|
+| ![hover](assets/snapshot_hover.png) | ![track](assets/snapshot_track.png) | ![forest](assets/snapshot_forest.png) |
+
+---
+
+## Training Curves (Track Task)
+
+| DreamerV3 | PPO |
+|:---:|:---:|
+| ![dreamerv3 track score](assets/score_dreamerv3_track.png) | ![ppo track score](assets/score_ppo_track.png) |
+
 ---
 
 ## Installation
@@ -45,50 +57,41 @@ conda activate dreamerv3-drone
 ### DreamerV3
 
 ```sh
-# MuJoCo — forest navigation
-python dreamerv3/main.py \
-  --logdir ~/logdir/dreamerv3/mujoco-forest \
-  --configs mujocoforest \
-  --jax.platform cuda
-
-# MuJoCo — trajectory tracking
-python dreamerv3/main.py \
-  --logdir ~/logdir/dreamerv3/mujoco-track \
-  --configs mujocotrack \
-  --jax.platform cuda
+python dreamerv3/main.py --configs mujocohover
+python dreamerv3/main.py --configs mujocotrack
+python dreamerv3/main.py --configs mujocoforest
 ```
 
-To continue a stopped run, use the same `--logdir`.
+To resume a stopped run, reuse the same `--logdir`.
 
-### PPO Baseline (MJX, GPU-parallel)
-
-Runs ~4096 environments in parallel on GPU via `mujoco.mjx` + JAX.
+### PPO
 
 ```sh
-python train_ppo.py \
-  --task forest \
-  --logdir ~/logdir/ppo/mujoco-forest \
-  --n_envs 4096 \
-  --steps 100000000
+python train_ppo.py --task hover
+python train_ppo.py --task track
+python train_ppo.py --task forest
 ```
-
-Available tasks: `hover`, `track`, `forest`
 
 ---
 
 ## Visualization
 
-Play a trained policy with MuJoCo viewer:
+Play a trained policy with the MuJoCo viewer:
+
+### DreamerV3
 
 ```sh
-# DreamerV3 checkpoint
-python play_mujoco.py ~/logdir/dreamerv3/mujoco-forest --task forest
+python play_mujoco.py ~/logdir/dreamerv3/hover --task hover
+python play_mujoco.py ~/logdir/dreamerv3/track --task track
+python play_mujoco.py ~/logdir/dreamerv3/forest --task forest
+```
 
-# PPO checkpoint
-python play_mujoco.py ~/logdir/ppo/mujoco-forest --task forest --algo ppo
+### PPO
 
-# Headless (no GUI)
-python play_mujoco.py ~/logdir/dreamerv3/mujoco-forest --task forest --no-gui
+```sh
+python play_mujoco.py ~/logdir/ppo/hover --task hover --algo ppo
+python play_mujoco.py ~/logdir/ppo/track --task track --algo ppo
+python play_mujoco.py ~/logdir/ppo/forest --task forest --algo ppo
 ```
 
 ---

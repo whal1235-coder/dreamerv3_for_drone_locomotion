@@ -654,8 +654,6 @@ class MuJoCoForestDrone(_DroneBase):
         elif speed > self.MAX_SPEED:       term_reason = f'overspeed v={speed:.2f}'
         elif min_obs_dist < self.MIN_DIST: term_reason = f'collision dist={min_obs_dist:.2f}'
         terminated = term_reason is not None
-        if terminated:
-            print(f'[forest] terminated: {term_reason}  step={self._step_cnt}')
         truncated  = self._step_cnt >= self.MAX_STEPS
         done       = terminated or truncated
         self._done = done
@@ -756,8 +754,6 @@ class MuJoCoForest2Drone(MuJoCoForestDrone):
         elif min_obs_dist < self.MIN_DIST:  term_reason = f'collision dist={min_obs_dist:.2f}'
         elif goal_reached:                  term_reason = 'goal_reached'
         terminated = term_reason is not None
-        if terminated and term_reason != 'goal_reached':
-            print(f'[forest] terminated: {term_reason}  step={self._step_cnt}')
         truncated  = self._step_cnt >= self.MAX_STEPS
         done       = terminated or truncated
         self._done = done

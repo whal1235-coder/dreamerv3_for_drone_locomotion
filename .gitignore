@@ -1,7 +1,22 @@
-.pytest_cache
-dist
+# Python
 __pycache__/
 *.py[cod]
 *.egg-info
+dist
+.pytest_cache
+
+# MuJoCo
 MUJOCO_LOG.TXT
-;
+
+# Original DreamerV3 benchmark scores (unused)
+scores/
+
+# Logs and checkpoints
+logdir/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store

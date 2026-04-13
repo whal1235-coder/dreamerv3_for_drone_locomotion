@@ -187,7 +187,24 @@ def _find_best_ckpt_from_log(logdir: pathlib.Path, algo: str = 'ppo') -> pathlib
 
     ckpt_dir = logdir / 'ckpt'
 
-    # All numbered checkpoints, sorted by step
+    import pickle as _pickle
+
+    def _dreamer_step(p):
+        """Read step from DreamerV3 checkpoint directory's step.pkl."""
+        step_file = p / 'step.pkl'
+        if step_file.exists():
+            with open(step_file, 'rb') as f:
+                return int(_pickle.load(f))
+        return -1
+
+    def _resolve_latest(ckpt_dir):
+        """Read the 'latest' pointer file and return the actual checkpoint directory."""
+        latest_file = ckpt_dir / 'latest'
+        if latest_file.is_file():
+            return ckpt_dir / latest_file.read_text().strip()
+        return latest_file  # fallback: return as-is
+
+    # All checkpoints, sorted by step
     if algo == 'ppo':
         ckpt_files = sorted(
             (p for p in ckpt_dir.glob('[0-9]*.pkl')),
@@ -196,8 +213,8 @@ def _find_best_ckpt_from_log(logdir: pathlib.Path, algo: str = 'ppo') -> pathlib
     else:
         ckpt_files = sorted(
             (p for p in ckpt_dir.iterdir()
-             if p.is_dir() and p.name not in ('latest', 'best') and p.name.isdigit()),
-            key=lambda p: int(p.name),
+             if p.is_dir() and p.name not in ('latest', 'best')),
+            key=_dreamer_step,
         )
 
     # Read metrics.jsonl to find the step at which the best score occurred
@@ -219,7 +236,7 @@ def _find_best_ckpt_from_log(logdir: pathlib.Path, algo: str = 'ppo') -> pathlib
                     continue
 
     def _ckpt_step(p):
-        return int(p.stem) if p.suffix == '.pkl' else int(p.name)
+        return int(p.stem) if p.suffix == '.pkl' else _dreamer_step(p)
 
     if best_step is not None and ckpt_files:
         print(f'Best episode/score={best_score:.2f} at step {best_step:,}')
@@ -236,7 +253,7 @@ def _find_best_ckpt_from_log(logdir: pathlib.Path, algo: str = 'ppo') -> pathlib
         print(f'No checkpoint before best step, using first: {ckpt_files[0].name}')
         return ckpt_files[0]
 
-    # Fallback: latest numbered checkpoint
+    # Fallback: latest checkpoint
     if ckpt_files:
         print(f'[warn] Could not determine best step, using latest: {ckpt_files[-1].name}')
         return ckpt_files[-1]
@@ -245,8 +262,8 @@ def _find_best_ckpt_from_log(logdir: pathlib.Path, algo: str = 'ppo') -> pathlib
         print('[warn] No checkpoints found, trying latest.pkl')
         return ckpt_dir / 'latest.pkl'
     else:
-        print('[warn] No checkpoints found, trying latest')
-        return ckpt_dir / 'latest'
+        print('[warn] No checkpoints found, using latest pointer')
+        return _resolve_latest(ckpt_dir)
 
 
 def _ckpt_step_str(path: pathlib.Path) -> str:
@@ -329,7 +346,8 @@ def main():
         elif not args.no_best:
             ckpt_path = _find_best_ckpt_from_log(logdir, algo='dreamer')
         else:
-            ckpt_path = logdir / 'ckpt' / 'latest'
+            latest_file = logdir / 'ckpt' / 'latest'
+            ckpt_path = logdir / 'ckpt' / latest_file.read_text().strip()
         print(f'Loading DreamerV3 checkpoint: {ckpt_path}')
         cp = elements.Checkpoint()
         cp.agent = agent

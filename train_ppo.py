@@ -724,7 +724,7 @@ def sample_action(mean, std, rng):
 # ===========================================================================
 
 class PPOConfig(NamedTuple):
-    n_envs:      int   = 4096
+    n_envs:      int   = 1024
     n_steps:     int   = 512
     n_epochs:    int   = 10
     n_minibatch: int   = 32
@@ -1025,8 +1025,8 @@ def main():
     parser.add_argument('--logdir',     type=str,  default=None,
                         help='checkpoint/log directory (default: ~/logdir/ppo/<task>)')
     parser.add_argument('--n_envs',     type=int,  default=1024)
-    parser.add_argument('--steps',      type=int,  default=100_000_000,
-                        help='total env steps (default: 100M)')
+    parser.add_argument('--steps',      type=int,  default=10_000_000,
+                        help='total env steps (default: 10M)')
     args = parser.parse_args()
 
     _, _, _, _, log_every_secs = _load_ppo_config(task=args.task)

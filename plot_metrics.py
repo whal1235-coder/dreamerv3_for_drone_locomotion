@@ -70,13 +70,14 @@ def main():
             rows.append((group_name, keys[i:i + n_cols]))
 
     n_rows = max(len(rows), 1)
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 3.5 * n_rows))
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(6 * n_cols, 4.5 * n_rows))
     if n_rows == 1:
         axes = axes[np.newaxis, :]
 
     cur_step = max((d['step'] for d in data), default=0)
     fig.suptitle(f'{logdir.name}  (step {cur_step:,})', fontsize=13)
 
+    score_entries = None
     used = set()
     for row_idx, (group_name, keys) in enumerate(rows):
         for col_idx, key in enumerate(keys):
@@ -92,6 +93,8 @@ def main():
             label   = key.split('/')[-2] if key.endswith('/avg') else key.split('/')[-1]
             plot_series(ax, steps_, values_, COLOR, f'{group_name} / {label}', w=w)
             used.add((row_idx, col_idx))
+            if key == 'episode/score':
+                score_entries = (steps_, values_)
 
         # hide unused subplots in this row
         for col_idx in range(len(keys), n_cols):
@@ -101,6 +104,18 @@ def main():
     out = args.out or str(logdir / 'loss.png')
     plt.savefig(out, dpi=150)
     print(f'Saved: {out}')
+    plt.close(fig)
+
+    # save score-only panel
+    if score_entries is not None:
+        fig_s, ax_s = plt.subplots(figsize=(6, 4.5))
+        plot_series(ax_s, score_entries[0], score_entries[1], COLOR, 'Episode / score', w=w)
+        fig_s.suptitle(f'{logdir.name}  (step {cur_step:,})', fontsize=13)
+        plt.tight_layout()
+        score_out = str(logdir / 'score.png')
+        plt.savefig(score_out, dpi=150)
+        print(f'Saved: {score_out}')
+        plt.close(fig_s)
 
 
 if __name__ == '__main__':
