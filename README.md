@@ -33,7 +33,15 @@ Based on [Mastering Diverse Domains through World Models (Hafner et al., Nature 
 
 ---
 
-## Training Curves (Track Task)
+## Sample Efficiency (Track Task)
+
+DreamerV3 trains a world model and optimizes the policy entirely inside imagined rollouts, requiring far fewer real environment interactions. PPO collects on-policy experience directly from the environment, which is less sample-efficient.
+
+| | DreamerV3 | PPO |
+|---|:---:|:---:|
+| **Env steps** | 1M | 10M |
+
+DreamerV3 achieves competitive scores using **10× fewer environment steps** than PPO.
 
 | DreamerV3 | PPO |
 |:---:|:---:|
