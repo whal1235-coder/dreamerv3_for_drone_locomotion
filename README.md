@@ -135,7 +135,9 @@ python -m scope.viewer --basedir ~/logdir --port 8000
 
 ## Acknowledgements
 
-This repository was developed with [Claude Code](https://claude.ai/code).
+- [DreamerV3](https://github.com/danijar/dreamerv3) — world model RL framework by Danijar Hafner et al.
+- [OmniDrones](https://github.com/btx0424/OmniDrones) — drone simulation environments
+- [Claude Code](https://claude.ai/code) — AI coding assistant used in development
 
 [paper]: https://arxiv.org/pdf/2301.04104
 [jax]: https://github.com/google/jax#pip-installation-gpu-cuda
